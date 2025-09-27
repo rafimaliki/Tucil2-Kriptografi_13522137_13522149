@@ -1,7 +1,5 @@
 import os
 import sys
-import tkinter as tk
-from tkinter import filedialog
 import questionary
 from typing import Optional, List
 
@@ -14,19 +12,35 @@ def decode_bytes(content: bytes, encoding: str = "utf-8") -> str:
     return content.decode(encoding, errors="ignore")
 
 def select_file(prompt: str = "Select a file", ext: Optional[List[str]] = None) -> str:
-    root = tk.Tk()
-    root.withdraw() 
-
-    if ext and len(ext) > 0:
-        filetypes = [(f"{e.upper()} files", f"*.{e}") for e in ext]
-    else:
-        filetypes = [("All files", "*.*")]
-
-    file_path = filedialog.askopenfilename(title=prompt, filetypes=filetypes)
-    return file_path or ""
+    while True:
+        file_path = input(f"{prompt}: ").strip()
+        if not file_path:
+            print("Please enter a valid file path.")
+            continue
+        
+        # Convert relative path to absolute if needed
+        if not os.path.isabs(file_path):
+            file_path = os.path.abspath(file_path)
+        
+        if not os.path.exists(file_path):
+            print(f"File not found: {file_path}")
+            continue
+            
+        if not os.path.isfile(file_path):
+            print(f"Path is not a file: {file_path}")
+            continue
+            
+        # Check extension if specified
+        if ext and len(ext) > 0:
+            file_ext = os.path.splitext(file_path)[1].lstrip(".").lower()
+            if file_ext not in [e.lower() for e in ext]:
+                print(f"Invalid file extension. Expected: {', '.join(ext)}")
+                continue
+        
+        return file_path
 
 def read_file(prompt: str = "Select a file", ext: Optional[List[str]] = None) -> Optional[dict]:
-    print(f"{_BLUE}!{_RESET} {_WHITE}{prompt}{_RESET} ", end="", flush=True)
+    print(f"{_BLUE}!{_RESET} {_WHITE}{prompt}{_RESET}")
     path = select_file(prompt, ext)
     if not path:
         return None
@@ -36,7 +50,7 @@ def read_file(prompt: str = "Select a file", ext: Optional[List[str]] = None) ->
     with open(path, "rb") as f:
         content = f.read()
 
-    print(f"{_ORANGE}{filename}{_RESET}")
+    print(f"Selected: {_ORANGE}{filename}{_RESET}")
     
     return {
         "filename": filename,
@@ -85,21 +99,34 @@ def read_cli(prompt, return_type=str, valid_inputs: Optional[List] = None) -> in
         return val
 
 def write_file(content: str, prompt: str = "Save file as:", ext: Optional[List[str]] = None) -> Optional[str]:
-    root = tk.Tk()
-    root.withdraw()
+    print(f"{_BLUE}!{_RESET} {_WHITE}{prompt}{_RESET}")
     
-    print(f"{_BLUE}!{_RESET} {_WHITE}{prompt}{_RESET}", end=" ", flush=True)
-
-    if ext and len(ext) > 0:
-        filetypes = [(f"{e.upper()} files", f"*.{e}") for e in ext]
-        def_ext = f".{ext[0]}"
-    else:
-        filetypes = [("All files", "*.*")]
-        def_ext = None
-
-    path = filedialog.asksaveasfilename(title=prompt, filetypes=filetypes, defaultextension=def_ext)
-    if not path:
-        return None
+    while True:
+        path = input("Enter save path: ").strip()
+        if not path:
+            print("Please enter a valid file path.")
+            continue
+        
+        # Convert relative path to absolute if needed
+        if not os.path.isabs(path):
+            path = os.path.abspath(path)
+        
+        # Add extension if not present and extension is specified
+        if ext and len(ext) > 0:
+            file_ext = os.path.splitext(path)[1].lstrip(".")
+            if not file_ext:
+                path += f".{ext[0]}"
+        
+        # Check if directory exists
+        dir_path = os.path.dirname(path)
+        if not os.path.exists(dir_path):
+            try:
+                os.makedirs(dir_path)
+            except Exception as e:
+                print(f"Cannot create directory: {e}")
+                continue
+        
+        break
 
     filename = os.path.basename(path)
 
@@ -109,24 +136,9 @@ def write_file(content: str, prompt: str = "Save file as:", ext: Optional[List[s
     else:
         with open(path, "w", encoding="utf-8", errors="ignore") as f:
             f.write(content)
+    
     abs_path = os.path.abspath(path)
-
-    if os.name == "nt":
-        url = "file:///" + abs_path.replace("\\", "/")
-    else:
-        url = "file://" + abs_path
-
-    osc_start = "\033]8;;"
-    osc_end = "\033\\"
-    osc_close = "\033]8;;\033\\"
-    hyperlink = f"{osc_start}{url}{osc_end}{abs_path}{osc_close}"
-
-    if sys.stdout.isatty():
-        path_display = hyperlink
-    else:
-        path_display = abs_path
-
-    print(f"{_ORANGE}{filename}{_RESET} at {path_display}\n")
+    print(f"Saved: {_ORANGE}{filename}{_RESET} at {abs_path}\n")
 
     return path
 
@@ -154,12 +166,12 @@ def input_mode() -> str:
     return mode
 
 def input_embed() -> tuple:
-    cover_file = read_file("Choose an MP3 audio file (cover):", ext=["mp3"])
+    cover_file = read_file("Choose an MP3 audio file (cover)", ext=["mp3"])
     
     if not cover_file:
         raise ValueError("No cover file selected, exiting program.")
 
-    secret_file = read_file("Choose a secret file:", ext=[])
+    secret_file = read_file("Choose a secret file", ext=[])
     if not secret_file:
         raise ValueError("No secret file selected, exiting program.")
 
@@ -197,7 +209,7 @@ def input_embed() -> tuple:
     )
 
 def input_extract() -> tuple:
-    stego_file = read_file("Choose an MP3 audio file (stego):", ext=["mp3"])
+    stego_file = read_file("Choose an MP3 audio file (stego)", ext=["mp3"])
     
     if not stego_file:
         raise ValueError("No stego file selected, exiting program.")
