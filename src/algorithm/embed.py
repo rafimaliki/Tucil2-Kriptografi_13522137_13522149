@@ -26,7 +26,7 @@ def write_secret_bits(cover_bytes, offsets, secret_bits, n_lsb):
             cover_bytes[offsets[index]] |= int(bit_to_embed, 2)
     return cover_bytes
 
-def encrypt_bits(secret_file_bits: str, key: str) -> str:  # Parameter sekarang string
+def encrypt_bits(secret_file_bits: str, key: str) -> str:
     key_bytes = key.encode("utf-8")
     key_len = len(key_bytes)
 
