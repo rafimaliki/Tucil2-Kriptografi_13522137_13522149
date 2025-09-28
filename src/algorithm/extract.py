@@ -32,8 +32,9 @@ def decrypt_bits(secret_bits: str, key: str) -> str:
     secret_bytes = bytearray()
     for i in range(0, len(secret_bits), 8):
         bit_chunk = secret_bits[i:i+8]
-        if len(bit_chunk) == 8:
-            secret_bytes.append(int(bit_chunk, 2))
+        if len(bit_chunk) < 8:
+            bit_chunk = bit_chunk.ljust(8, '0')
+        secret_bytes.append(int(bit_chunk, 2))
 
     decrypted = bytearray()
     for i, byte in enumerate(secret_bytes):
