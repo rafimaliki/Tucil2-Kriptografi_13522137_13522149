@@ -1,14 +1,16 @@
 from utils.mp3processing import parse_ID3v2, parse_ID3v1, get_mpeg_frames_offset, parse_mpeg_frame_header, count_modifiable_bytes, get_modifiable_bytes_offset
+import hashlib
 
 def get_bits(byte_data):
     bits = ''.join(f'{byte:08b}' for byte in byte_data)
     return bits
 
 def shuffle(offsets, key):
-    import random
-    random.seed(key)
     shuffled = offsets[:]
-    random.shuffle(shuffled)
+    for i in range(len(shuffled) - 1, 0, -1):
+        digest = hashlib.sha256(f"{key}-{i}".encode()).digest()
+        j = int.from_bytes(digest, "big") % (i + 1)
+        shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
     return shuffled
 
 def embed(cover_file, secret_file, encrypted, random_insertion, n_lsb, key="nokey"):
