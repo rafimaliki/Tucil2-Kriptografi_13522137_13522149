@@ -41,7 +41,7 @@ def read_file(prompt: str = "Select a file", ext: Optional[List[str]] = None) ->
     return {
         "filename": filename,
         "ext": extension,
-        "content": content,
+        "content": bytearray(content),
     }
 
 def read_cli(prompt, return_type=str, valid_inputs: Optional[List] = None) -> int | str:
@@ -173,11 +173,11 @@ def input_embed() -> tuple:
         choices=["Yes", "No"]
     ).ask()
     
-    n_lsb = read_cli(
-        "Enter the number of LSBs to use (1-4): ",
-        return_type=int,
-        valid_inputs=[1, 2, 3, 4]
-    )
+    n_lsb = questionary.select(
+        "Select number of LSBs to use:",
+        choices=["1", "2", "3", "4"]
+    ).ask()
+    n_lsb = int(n_lsb)
 
     if (encrypted == "Yes" or random_insertion == "Yes"):
         key = read_cli(
@@ -202,11 +202,11 @@ def input_extract() -> tuple:
     if not stego_file:
         raise ValueError("No stego file selected, exiting program.")
 
-    n_lsb = read_cli(
-        "Enter the number of LSBs used (1-4): ",
-        return_type=int,
-        valid_inputs=[1, 2, 3, 4]
-    )
+    n_lsb = questionary.select(
+        "Select number of LSBs to use:",
+        choices=["1", "2", "3", "4"]
+    ).ask()
+    n_lsb = int(n_lsb)
 
     encrypted = questionary.select(
         "Was the secret file encrypted?",
