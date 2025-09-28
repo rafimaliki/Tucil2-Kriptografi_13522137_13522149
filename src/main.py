@@ -1,8 +1,6 @@
 from utils.io import print_splash, input_mode, input_embed, input_extract, write_file  
 from algorithm.extract import extract
 from algorithm.embed import embed
-from utils.io import read_file
-
 
 def main():
     print_splash()
