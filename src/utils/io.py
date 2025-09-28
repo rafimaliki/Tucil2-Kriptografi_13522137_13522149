@@ -221,7 +221,7 @@ def input_embed() -> tuple:
     )
 
 def input_extract() -> tuple:
-    stega_file = read_file("Choose an MP3 audio file (stego):", ext=["mp3"])
+    stega_file = read_file("Choose an MP3 audio file (stega):", ext=["mp3"])
     
     if not stega_file:
         raise ValueError("No stega  file selected, exiting program.")
