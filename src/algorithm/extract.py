@@ -25,16 +25,23 @@ def read_secret_bits(stego_bytes, offsets, total_secret_bits, n_lsb):
     
     return secret_bits
 
-def decrypt_bits(secret_bits: bytes, key: str) -> bytes:
-    key_bytes = key.encode("utf-8")  # ubah key jadi bytes
+def decrypt_bits(secret_bits: str, key: str) -> str:
+    key_bytes = key.encode("utf-8")
     key_len = len(key_bytes)
 
+    secret_bytes = bytearray()
+    for i in range(0, len(secret_bits), 8):
+        bit_chunk = secret_bits[i:i+8]
+        if len(bit_chunk) == 8:
+            secret_bytes.append(int(bit_chunk, 2))
+
     decrypted = bytearray()
-    for i, byte in enumerate(secret_bits):
-        k = key_bytes[i % key_len]  # ambil key sesuai posisi
+    for i, byte in enumerate(secret_bytes):
+        k = key_bytes[i % key_len]
         decrypted.append((byte - k + 256) % 256)
 
-    return bytes(decrypted)
+    decrypted_bits = ''.join(format(b, '08b') for b in decrypted)
+    return decrypted_bits
 
 
 @log_execution_time
@@ -70,10 +77,10 @@ def extract(stego_file, key):
 
     secret_bits = read_secret_bits(stego_bytes, secret_offsets, num_secret_bytes * 8, n_lsb)
     
-    # if is_encrypted:
-    #     if not key:
-    #         raise ValueError("A key is required for decryption.")
-    #     secret_bits = decrypt_bits(secret_bits, key)
+    if is_encrypted:
+        if not key:
+            raise ValueError("A key is required for decryption.")
+        secret_bits = decrypt_bits(secret_bits, key)
         
     secret_bytes = bit_to_byte(secret_bits)
     

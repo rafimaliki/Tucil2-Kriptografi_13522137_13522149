@@ -26,17 +26,24 @@ def write_secret_bits(cover_bytes, offsets, secret_bits, n_lsb):
             cover_bytes[offsets[index]] |= int(bit_to_embed, 2)
     return cover_bytes
 
-def encrypt_bits(secret_file_bits: bytes, key: str) -> bytes:
+def encrypt_bits(secret_file_bits: str, key: str) -> str:  # Parameter sekarang string
+    """Encrypt bit string using key"""
     key_bytes = key.encode("utf-8")
     key_len = len(key_bytes)
 
+    secret_bytes = bytearray()
+    for i in range(0, len(secret_file_bits), 8):
+        bit_chunk = secret_file_bits[i:i+8]
+        if len(bit_chunk) == 8:
+            secret_bytes.append(int(bit_chunk, 2))
+    
     encrypted = bytearray()
-    for i, byte in enumerate(secret_file_bits):
+    for i, byte in enumerate(secret_bytes):
         k = key_bytes[i % key_len]
         encrypted.append((byte + k) % 256)
 
-    return bytes(encrypted)
-
+    encrypted_bits = ''.join(format(b, '08b') for b in encrypted)
+    return encrypted_bits
 
 @log_execution_time
 def embed(cover_file, secret_file, is_encrypted, is_random_insertion, n_lsb, key="nokey"):
