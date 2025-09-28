@@ -54,6 +54,8 @@ def embed(cover_file, secret_file, is_encrypted, is_random_insertion, n_lsb, key
     secret_offsets = modifiable_bytes_offset[80:]
 
     if (is_random_insertion):
+        if not key:
+            raise ValueError("A key is required for random insertion.")
         secret_offsets = shuffle(secret_offsets, key)
         
     secret_header_bits = byte_to_bit(create_secret_header(len(secret_file_bytes), n_lsb, is_encrypted, is_random_insertion, secret_file.get("ext")))

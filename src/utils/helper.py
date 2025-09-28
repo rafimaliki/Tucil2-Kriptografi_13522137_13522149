@@ -5,12 +5,12 @@ Get the size of ID3v2 header if present, otherwise return 0.
 """
 def len_ID3v2(mp3_bytes):
     if mp3_bytes[0:3] != b'ID3':
-        return 0  # no ID3v2
+        return 0 
 
     size_bytes = mp3_bytes[6:10]
     size = ((size_bytes[0] & 0x7F) << 21) | ((size_bytes[1] & 0x7F) << 14) | \
            ((size_bytes[2] & 0x7F) << 7) | (size_bytes[3] & 0x7F)
-    total_size = size + 10  # add header
+    total_size = size + 10 
     return total_size
 
 """
@@ -18,7 +18,7 @@ Get the size of ID3v1 tag if present, otherwise return 0.
 """
 def len_ID3v1(mp3_bytes):
     if len(mp3_bytes) < 128 or mp3_bytes[-128:-125] != b'TAG':
-        return 0  # no ID3v1
+        return 0
     return 128
 
 
