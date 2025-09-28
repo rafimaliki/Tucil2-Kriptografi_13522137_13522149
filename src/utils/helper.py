@@ -222,18 +222,18 @@ def create_secret_header(num_secret_bytes, n_lsb, is_encrypted, is_random_insert
     header[5] = flags
     header[6:10] = ext.encode().ljust(4, b'\0')
     
-    print("\nHeader:", ' '.join(f'{byte:02X}' for byte in header))
     return header
 
 """
 Parse the secret header for the LSB steganography.
 """
-def parse_secret_header(header_bytes):
+def parse_secret_header(header_bits):
     
-    # print("\nHeader:", ' '.join(f'{byte:02X}' for byte in header_bytes))
+    if len(header_bits) != 80:
+        raise ValueError("Invalid header length in bits")
     
-    if len(header_bytes) != 10:
-        raise ValueError("Invalid header length")
+    header_bytes = bit_to_byte(header_bits)
+    
     num_secret_bytes = int.from_bytes(header_bytes[0:4], 'big')
     n_lsb = header_bytes[4]
     flags = header_bytes[5]
@@ -241,10 +241,10 @@ def parse_secret_header(header_bytes):
     is_random_insertion = (flags & 0b00000010) != 0
     ext = header_bytes[6:10].rstrip(b'\0').decode()
     
-    # print(f"Secret file size (in bytes): {num_secret_bytes}")
-    # print(f"Number of LSBs used: {n_lsb}")
-    # print(f"Is encrypted: {'Yes' if is_encrypted else 'No'}")
-    # print(f"Is random insertion: {'Yes' if is_random_insertion else 'No'}")
-    # print(f"File extension: {ext if ext else 'None'}")
-        
-    return num_secret_bytes, n_lsb, is_encrypted, is_random_insertion, ext
+    return {
+        "num_secret_bytes": num_secret_bytes,
+        "n_lsb": n_lsb,
+        "is_encrypted": is_encrypted,
+        "is_random_insertion": is_random_insertion,
+        "ext": ext
+    }
