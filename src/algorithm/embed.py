@@ -7,7 +7,7 @@ def write_header_bits(cover_bytes, offsets, header_bits):
         bit_to_embed = bit_to_embed.ljust(1, '0')
         
         lsb_bits = f'{cover_bytes[offsets[i]]:08b}'[-1:]
-        if (lsb_bits != bit_to_embed):
+        if lsb_bits != bit_to_embed:
             cover_bytes[offsets[i]] &= (0xFF << 1)
             cover_bytes[offsets[i]] |= int(bit_to_embed, 2)
     return cover_bytes
@@ -21,7 +21,7 @@ def write_secret_bits(cover_bytes, offsets, secret_bits, n_lsb):
         
         lsb_bits = f'{cover_bytes[offsets[index]]:08b}'[-n_lsb:]
         
-        if (lsb_bits != bit_to_embed):
+        if lsb_bits != bit_to_embed:
             cover_bytes[offsets[index]] &= (0xFF << n_lsb)
             cover_bytes[offsets[index]] |= int(bit_to_embed, 2)
     return cover_bytes
@@ -53,7 +53,7 @@ def embed(cover_file, secret_file, is_encrypted, is_random_insertion, n_lsb, key
     header_offsets = modifiable_bytes_offset[0:80]
     secret_offsets = modifiable_bytes_offset[80:]
 
-    if (is_random_insertion):
+    if is_random_insertion:
         if not key:
             raise ValueError("A key is required for random insertion.")
         secret_offsets = shuffle(secret_offsets, key)
@@ -61,8 +61,8 @@ def embed(cover_file, secret_file, is_encrypted, is_random_insertion, n_lsb, key
     secret_header_bits = byte_to_bit(create_secret_header(len(secret_file_bytes), n_lsb, is_encrypted, is_random_insertion, secret_file.get("ext")))
     secret_file_bits = byte_to_bit(secret_file_bytes)
     
-    # if (is_encrypted):
-    #     if (not key):
+    # if is_encrypted:
+    #     if not key:
     #         raise ValueError("A key is required for encryption.")
     #     secret_file_bits = encrypt_bits(secret_file_bits, key)
 

@@ -168,12 +168,12 @@ def input_embed() -> tuple:
     is_encrypted = questionary.select(
         "Do you want to encrypt the secret file?",
         choices=["Yes", "No"]
-    ).ask()
+    ).ask() == "Yes"
 
     is_random_insertion = questionary.select(
         "Do you want to use random insertion?",
         choices=["Yes", "No"]
-    ).ask()
+    ).ask() == "Yes"
     
     n_lsb = questionary.select(
         "Select number of LSBs to use:",
@@ -181,7 +181,7 @@ def input_embed() -> tuple:
     ).ask()
     n_lsb = int(n_lsb)
 
-    if (is_encrypted == "Yes" or is_random_insertion == "Yes"):
+    if is_encrypted  or is_random_insertion:
         key = read_cli(
             "Enter the key for encryption/random insertion: ",
             return_type=str
@@ -192,8 +192,8 @@ def input_embed() -> tuple:
     return (
         cover_file,
         secret_file,
-        is_encrypted == "Yes",
-        is_random_insertion == "Yes",
+        is_encrypted,
+        is_random_insertion,
         n_lsb,
         key
     )

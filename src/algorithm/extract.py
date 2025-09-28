@@ -51,14 +51,14 @@ def extract(stego_file, key):
     is_random_insertion = parsed_header.get("is_random_insertion")
     ext = parsed_header.get("ext")
 
-    if (is_random_insertion):
+    if is_random_insertion:
         if not key:
             raise ValueError("A key is required for random insertion.")
         secret_offsets = shuffle(secret_offsets, key)
 
     secret_bits = read_secret_bits(stego_bytes, secret_offsets, num_secret_bytes * 8, n_lsb)
     
-    # if (is_encrypted):
+    # if is_encrypted:
     #     if not key:
     #         raise ValueError("A key is required for decryption.")
     #     secret_bits = decrypt_bits(secret_bits, key)
