@@ -25,6 +25,18 @@ def read_secret_bits(stego_bytes, offsets, total_secret_bits, n_lsb):
     
     return secret_bits
 
+def decrypt_bits(secret_bits: bytes, key: str) -> bytes:
+    key_bytes = key.encode("utf-8")  # ubah key jadi bytes
+    key_len = len(key_bytes)
+
+    decrypted = bytearray()
+    for i, byte in enumerate(secret_bits):
+        k = key_bytes[i % key_len]  # ambil key sesuai posisi
+        decrypted.append((byte - k + 256) % 256)
+
+    return bytes(decrypted)
+
+
 @log_execution_time
 def extract(stego_file, key):
     

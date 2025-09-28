@@ -26,6 +26,18 @@ def write_secret_bits(cover_bytes, offsets, secret_bits, n_lsb):
             cover_bytes[offsets[index]] |= int(bit_to_embed, 2)
     return cover_bytes
 
+def encrypt_bits(secret_file_bits: bytes, key: str) -> bytes:
+    key_bytes = key.encode("utf-8")
+    key_len = len(key_bytes)
+
+    encrypted = bytearray()
+    for i, byte in enumerate(secret_file_bits):
+        k = key_bytes[i % key_len]
+        encrypted.append((byte + k) % 256)
+
+    return bytes(encrypted)
+
+
 @log_execution_time
 def embed(cover_file, secret_file, is_encrypted, is_random_insertion, n_lsb, key="nokey"):
     
@@ -61,10 +73,10 @@ def embed(cover_file, secret_file, is_encrypted, is_random_insertion, n_lsb, key
     secret_header_bits = byte_to_bit(create_secret_header(len(secret_file_bytes), n_lsb, is_encrypted, is_random_insertion, secret_file.get("ext")))
     secret_file_bits = byte_to_bit(secret_file_bytes)
     
-    # if is_encrypted:
-    #     if not key:
-    #         raise ValueError("A key is required for encryption.")
-    #     secret_file_bits = encrypt_bits(secret_file_bits, key)
+    if is_encrypted:
+        if not key:
+            raise ValueError("A key is required for encryption.")
+        secret_file_bits = encrypt_bits(secret_file_bits, key)
 
     result_bytes = write_header_bits(cover_bytes, header_offsets, secret_header_bits)
     result_bytes = write_secret_bits(result_bytes, secret_offsets, secret_file_bits, n_lsb)
