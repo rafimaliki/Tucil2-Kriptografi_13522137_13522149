@@ -16,13 +16,23 @@ def decode_bytes(content: bytes, encoding: str = "utf-8") -> str:
 def select_file(prompt: str = "Select a file", ext: Optional[List[str]] = None) -> str:
     root = tk.Tk()
     root.withdraw() 
+    
+    root.attributes('-topmost', True)
+    root.after(1, lambda: root.focus_force())
+    root.after(1, lambda: root.attributes('-topmost', False))
 
     if ext and len(ext) > 0:
         filetypes = [(f"{e.upper()} files", f"*.{e}") for e in ext]
     else:
         filetypes = [("All files", "*.*")]
 
-    file_path = filedialog.askopenfilename(title=prompt, filetypes=filetypes)
+    file_path = filedialog.askopenfilename(
+        title=prompt, 
+        filetypes=filetypes,
+        parent=root
+    )
+    
+    root.destroy() 
     return file_path or ""
 
 def read_file(prompt: str = "Select a file", ext: Optional[List[str]] = None) -> Optional[dict]:
@@ -88,6 +98,10 @@ def write_file(content: str, prompt: str = "Save file as:", ext: Optional[List[s
     root = tk.Tk()
     root.withdraw()
     
+    root.attributes('-topmost', True)
+    root.after(1, lambda: root.focus_force())
+    root.after(1, lambda: root.attributes('-topmost', False))
+    
     print()
     
     print(f"{_BLUE}?{_RESET} {_WHITE}{prompt}{_RESET}", end=" ", flush=True)
@@ -99,8 +113,15 @@ def write_file(content: str, prompt: str = "Save file as:", ext: Optional[List[s
         filetypes = [("All files", "*.*")]
         def_ext = None
 
-    path = filedialog.asksaveasfilename(title=prompt, filetypes=filetypes, defaultextension=def_ext)
+    path = filedialog.asksaveasfilename(
+        title=prompt, 
+        filetypes=filetypes, 
+        defaultextension=def_ext,
+        parent=root
+    )
+    
     if not path:
+        root.destroy()
         return None
 
     filename = os.path.basename(path)
@@ -130,6 +151,7 @@ def write_file(content: str, prompt: str = "Save file as:", ext: Optional[List[s
 
     print(f"{_ORANGE}{filename}{_RESET} at {path_display}\n")
 
+    root.destroy() 
     return path
 
 def print_splash():
