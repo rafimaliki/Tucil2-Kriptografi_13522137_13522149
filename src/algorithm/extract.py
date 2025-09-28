@@ -14,16 +14,17 @@ def read_header_bits(stego_bytes, offsets):
 
 def read_secret_bits(stego_bytes, offsets, total_secret_bits, n_lsb):
     secret_bits = ''
-    header_bits_used = 10 * 8  
-    start_index = header_bits_used // n_lsb  
+    start_index = 80 
     
-    for i in range(total_secret_bits // n_lsb):
+    bytes_needed = (total_secret_bits + n_lsb - 1) // n_lsb  
+    
+    for i in range(bytes_needed):
         byte_offset = offsets[start_index + i]
         byte_value = stego_bytes[byte_offset]
         lsb_bits = f'{byte_value:08b}'[-n_lsb:]
         secret_bits += lsb_bits
     
-    return secret_bits
+    return secret_bits[:total_secret_bits]
 
 def decrypt_bits(secret_bits: str, key: str) -> str:
     key_bytes = key.encode("utf-8")
