@@ -26,13 +26,13 @@ def select_file(prompt: str = "Select a file", ext: Optional[List[str]] = None) 
     return file_path or ""
 
 def read_file(prompt: str = "Select a file", ext: Optional[List[str]] = None) -> Optional[dict]:
-    print(f"{_BLUE}!{_RESET} {_WHITE}{prompt}{_RESET} ", end="", flush=True)
+    print(f"{_BLUE}?{_RESET} {_WHITE}{prompt}{_RESET} ", end="", flush=True)
     path = select_file(prompt, ext)
     if not path:
         return None
 
     filename = os.path.basename(path)
-    extension = os.path.splitext(filename)[1].lstrip(".")
+    ext = os.path.splitext(filename)[1].lstrip(".")
     with open(path, "rb") as f:
         content = f.read()
 
@@ -40,7 +40,7 @@ def read_file(prompt: str = "Select a file", ext: Optional[List[str]] = None) ->
     
     return {
         "filename": filename,
-        "ext": extension,
+        "ext": ext,
         "content": bytearray(content),
     }
 
@@ -59,7 +59,7 @@ def read_cli(prompt, return_type=str, valid_inputs: Optional[List] = None) -> in
         except Exception:
             allowed.append(cand)
     while True:
-        print(f"{_BLUE}!{_RESET} {_WHITE}{prompt}{_RESET}", end="", flush=True)
+        print(f"{_BLUE}?{_RESET} {_WHITE}{prompt}{_RESET}", end="", flush=True)
         try:
             raw = input()
             if return_type is int:
@@ -80,7 +80,7 @@ def read_cli(prompt, return_type=str, valid_inputs: Optional[List] = None) -> in
                 print("invalid option, try again")
                 continue
         sys.stdout.write('\033[1A\033[2K')
-        sys.stdout.write(f"{_BLUE}!{_RESET} {_WHITE}{prompt}{_RESET}{_ORANGE}{val}{_RESET}\n")
+        sys.stdout.write(f"{_BLUE}?{_RESET} {_WHITE}{prompt}{_RESET}{_ORANGE}{val}{_RESET}\n")
         sys.stdout.flush()
         return val
 
@@ -88,7 +88,9 @@ def write_file(content: str, prompt: str = "Save file as:", ext: Optional[List[s
     root = tk.Tk()
     root.withdraw()
     
-    print(f"{_BLUE}!{_RESET} {_WHITE}{prompt}{_RESET}", end=" ", flush=True)
+    print()
+    
+    print(f"{_BLUE}?{_RESET} {_WHITE}{prompt}{_RESET}", end=" ", flush=True)
 
     if ext and len(ext) > 0:
         filetypes = [(f"{e.upper()} files", f"*.{e}") for e in ext]
@@ -163,12 +165,12 @@ def input_embed() -> tuple:
     if not secret_file:
         raise ValueError("No secret file selected, exiting program.")
 
-    encrypted = questionary.select(
+    is_encrypted = questionary.select(
         "Do you want to encrypt the secret file?",
         choices=["Yes", "No"]
     ).ask()
 
-    random_insertion = questionary.select(
+    is_random_insertion = questionary.select(
         "Do you want to use random insertion?",
         choices=["Yes", "No"]
     ).ask()
@@ -179,7 +181,7 @@ def input_embed() -> tuple:
     ).ask()
     n_lsb = int(n_lsb)
 
-    if (encrypted == "Yes" or random_insertion == "Yes"):
+    if (is_encrypted == "Yes" or is_random_insertion == "Yes"):
         key = read_cli(
             "Enter the key for encryption/random insertion: ",
             return_type=str
@@ -190,46 +192,27 @@ def input_embed() -> tuple:
     return (
         cover_file,
         secret_file,
-        encrypted == "Yes",
-        random_insertion == "Yes",
+        is_encrypted == "Yes",
+        is_random_insertion == "Yes",
         n_lsb,
         key
     )
 
 def input_extract() -> tuple:
-    stego_file = read_file("Choose an MP3 audio file (stego):", ext=["mp3"])
+    stega_file = read_file("Choose an MP3 audio file (stego):", ext=["mp3"])
     
-    if not stego_file:
-        raise ValueError("No stego file selected, exiting program.")
+    if not stega_file:
+        raise ValueError("No stega  file selected, exiting program.")
 
-    n_lsb = questionary.select(
-        "Select number of LSBs to use:",
-        choices=["1", "2", "3", "4"]
-    ).ask()
-    n_lsb = int(n_lsb)
-
-    encrypted = questionary.select(
-        "Was the secret file encrypted?",
-        choices=["Yes", "No"]
-    ).ask()
-
-    random_insertion = questionary.select(
-        "Was random insertion used?",
-        choices=["Yes", "No"]
-    ).ask()
+    key = read_cli(
+        "Enter the key for decryption/random extraction: ",
+        return_type=str
+    )
     
-    if (encrypted == "Yes" or random_insertion == "Yes"):
-        key = read_cli(
-            "Enter the key for decryption/random extraction: ",
-            return_type=str
-        )
-    else:
+    if key == "":
         key = None  
     
     return (
-        stego_file,
-        n_lsb,
-        encrypted == "Yes",
-        random_insertion == "Yes",
+        stega_file,
         key
     )

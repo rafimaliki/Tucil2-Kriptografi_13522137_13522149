@@ -1,56 +1,70 @@
-from utils.mp3processing import parse_ID3v2, parse_ID3v1, get_mpeg_frames_offset, parse_mpeg_frame_header, count_modifiable_bytes, get_modifiable_bytes_offset
-import hashlib
+from utils.helper import *
+from utils.logger import log_execution_time
 
-def get_bits(byte_data):
-    bits = ''.join(f'{byte:08b}' for byte in byte_data)
-    return bits
+def preprocess_secret_file(secret_file_bytes, is_encrypted, is_random_insertion, n_lsb, ext):
+    secret_file_size = len(secret_file_bytes)
+    
+    header = create_secret_header(secret_file_size, n_lsb, is_encrypted, is_random_insertion, ext)
+    
+    full_secret_bytes = header + secret_file_bytes
+    full_secret_bits = byte_to_bit(full_secret_bytes)
+    
+    return full_secret_bits
 
-def shuffle(offsets, key):
-    shuffled = offsets[:]
-    for i in range(len(shuffled) - 1, 0, -1):
-        digest = hashlib.sha256(f"{key}-{i}".encode()).digest()
-        j = int.from_bytes(digest, "big") % (i + 1)
-        shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
-    return shuffled
-
-def embed(cover_file, secret_file, encrypted, random_insertion, n_lsb, key="nokey"):
+@log_execution_time
+def embed(cover_file, secret_file, is_encrypted, is_random_insertion, n_lsb, key="nokey"):
+    
+    print("\nStarting embedding process...")
     
     mp3_bytes = cover_file.get("content")  
     secret_file_bytes = secret_file.get("content")
-    
-    secret_file_bits = get_bits(secret_file_bytes)
-    
-    size_ID3v2 = parse_ID3v2(mp3_bytes)
-    size_ID3v1 = parse_ID3v1(mp3_bytes)
-    
-    mpeg_frames_offset = get_mpeg_frames_offset(mp3_bytes, size_ID3v2, size_ID3v1)
-    print(f"MPEG frame offsets: {mpeg_frames_offset[:5]} ... {mpeg_frames_offset[-5:]} (total {len(mpeg_frames_offset)} frames found)")
 
-    parse_mpeg_frame_header(mp3_bytes[mpeg_frames_offset[0]:mpeg_frames_offset[0]+4])
-    
+    secret_file_bits = preprocess_secret_file(secret_file_bytes, is_encrypted, is_random_insertion, n_lsb, secret_file.get("ext"))
+
+    size_ID3v2 = len_ID3v2(mp3_bytes)
+    size_ID3v1 = len_ID3v1(mp3_bytes)
+
+    mpeg_frames_offset = get_mpeg_frames_offset(mp3_bytes, size_ID3v2, size_ID3v1)
+
     num_modifiable_bytes = count_modifiable_bytes(mp3_bytes, mpeg_frames_offset)
-    print("Modifiable bytes:", num_modifiable_bytes)
     
     modifiable_bytes_offset = get_modifiable_bytes_offset(mp3_bytes, mpeg_frames_offset)
-    modifiable_bytes_offset = shuffle(modifiable_bytes_offset, key)
-    print("Offsets of modifiable bytes:", modifiable_bytes_offset[:10], "...")
+
+    if (is_random_insertion):
+        modifiable_bytes_offset = shuffle(modifiable_bytes_offset, key)
+        
     
     max_secret_bits = num_modifiable_bytes * n_lsb
-    print("Max secret file size (in bytes):", max_secret_bits // 8)
     
-    if len(get_bits(secret_file_bytes)) > max_secret_bits:
-        print("Secret file size (in bytes):", len(secret_file_bytes))
-        print("Max secret file size (in bytes):", max_secret_bits // 8)
+    if len(secret_file_bits) > max_secret_bits: 
+        print("Secret file size with header (in bits):", len(secret_file_bits))
+        print("Max secret file size (in bits):", max_secret_bits)
         
         raise ValueError("Secret file is too large to be embedded in the cover file with the given number of LSBs.")
-    
-    print("Starting embedding process...")
     
     current_target_cover_byte_idx = 0
     bits_changed = 0
     bits_skipped = 0
     
-    for i in range(0, len(secret_file_bits), n_lsb):
+    for i in range(0, 80):
+        bit_to_embed = secret_file_bits[i:i+1]
+        bit_to_embed = bit_to_embed.ljust(1, '0')
+        
+        lsb_bits = f'{mp3_bytes[modifiable_bytes_offset[current_target_cover_byte_idx]]:08b}'[-1:]
+        if (lsb_bits != bit_to_embed):
+            mp3_bytes[modifiable_bytes_offset[current_target_cover_byte_idx]] &= (0xFF << 1)
+            mp3_bytes[modifiable_bytes_offset[current_target_cover_byte_idx]] |= int(bit_to_embed, 2)
+            bits_changed += 1
+        else:
+            bits_skipped += 1
+            
+        current_target_cover_byte_idx += 1
+        
+        if (current_target_cover_byte_idx >= len(modifiable_bytes_offset)):
+            print("No more modifiable bytes available.")
+            break
+    
+    for i in range(80, len(secret_file_bits), n_lsb):
 
         bit_to_embed = secret_file_bits[i:i+n_lsb]
         bit_to_embed = bit_to_embed.ljust(n_lsb, '0')  
