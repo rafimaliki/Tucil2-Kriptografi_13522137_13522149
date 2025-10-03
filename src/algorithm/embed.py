@@ -1,5 +1,6 @@
 from utils.helper import *
 from utils.logger import log_execution_time
+from algorithm.psnr import calculate_psnr
 
 def write_header_bits(cover_bytes, offsets, header_bits):
     for i in range(0, 80):
@@ -87,9 +88,13 @@ def embed(cover_file, secret_file, is_encrypted, is_random_insertion, n_lsb, key
             raise ValueError("A key is required for encryption.")
         secret_file_bits = encrypt_bits(secret_file_bits, key)
 
-    result_bytes = write_header_bits(cover_bytes, header_offsets, secret_header_bits)
+    result_bytes = cover_bytes.copy()
+    result_bytes = write_header_bits(result_bytes, header_offsets, secret_header_bits)
     result_bytes = write_secret_bits(result_bytes, secret_offsets, secret_file_bits, n_lsb)
 
     print("Embedding process completed.")
+
+    psnr = calculate_psnr(cover_bytes, result_bytes)
+    print(f"PSNR value: {psnr:.2f} dB\n")
 
     return result_bytes
