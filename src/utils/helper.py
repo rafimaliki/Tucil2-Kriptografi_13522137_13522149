@@ -63,11 +63,11 @@ def get_mpeg_frames_offset(mp3_bytes, ID3v2_size, ID3v1_size):
 Validate if a 32-bit header represents a valid MPEG frame header.
 """
 def is_valid_mpeg_header(header):
-    sync = (header >> 21) & 0x7FF          # Bits 31-21: sync word (should be 0x7FF)
-    version = (header >> 19) & 0x3         # Bits 20-19: MPEG version
-    layer = (header >> 17) & 0x3           # Bits 18-17: Layer description  
-    bitrate = (header >> 12) & 0xF         # Bits 15-12: Bitrate index
-    sampling = (header >> 10) & 0x3        # Bits 11-10: Sampling rate frequency index
+    sync = (header >> 21) & 0x7FF        
+    version = (header >> 19) & 0x3        
+    layer = (header >> 17) & 0x3           
+    bitrate = (header >> 12) & 0xF         
+    sampling = (header >> 10) & 0x3     
     
     if sync != 0x7FF:
         return False
@@ -90,11 +90,11 @@ def is_valid_mpeg_header(header):
 Calculate the length of an MPEG frame based on its header.
 """
 def calculate_frame_length(header):
-    version = (header >> 19) & 0x3         # Bits 20-19: MPEG version
-    layer = (header >> 17) & 0x3           # Bits 18-17: Layer description  
-    bitrate_index = (header >> 12) & 0xF   # Bits 15-12: Bitrate index
-    sampling_index = (header >> 10) & 0x3  # Bits 11-10: Sampling rate frequency index
-    padding = (header >> 9) & 0x1          # Bit 9: Padding bit
+    version = (header >> 19) & 0x3       
+    layer = (header >> 17) & 0x3         
+    bitrate_index = (header >> 12) & 0xF  
+    sampling_index = (header >> 10) & 0x3 
+    padding = (header >> 9) & 0x1         
     
     if version == 3:     
         mpeg_version = 1
