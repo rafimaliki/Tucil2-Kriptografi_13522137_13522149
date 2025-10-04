@@ -2,9 +2,9 @@
 
 > Tugas Kecil 2 IF4020 Kriptografi
 
-<div style="text-align: justify;">
+<p align="justify">
 A comprehensive steganography application that enables users to hide secret data within MP3 audio files using the LSB (Least Significant Bit) technique. This program can embed and extract hidden messages from MP3 files while maintaining audio quality and providing encryption and randomization features for enhanced security.
-</div>
+</p>
 
 <br>
 
@@ -24,7 +24,7 @@ A comprehensive steganography application that enables users to hide secret data
 
 ## Program Description
 
-<div style="text-align: justify;">
+<p align="justify">
 This steganography tool works by analyzing MP3 file structure, identifying MPEG audio frames, and embedding secret data into the modifiable portions of these frames. The program carefully avoids corrupting essential audio data by skipping frame headers and focusing on the audio payload sections where modifications won't affect playback quality.
 </div>
 
